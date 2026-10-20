@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import logoPerusahaan from '../../assets/download.jpg';
 
 const defaultData = {
+  logoUrl: "", // <-- Tambahan untuk logo dinamis
   waNumber: "6281234567890",
   contactDesc: "Ada pertanyaan? Ingin memesan? Tim Sinergy siap membantu Anda. Cara termudah adalah langsung via WhatsApp.",
   faqs: [
@@ -33,6 +34,7 @@ export default function KelolaKontak() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setWebsiteData({
+            logoUrl: data.logoUrl || defaultData.logoUrl, // <-- Ambil logo dari cloud
             waNumber: data.waNumber || defaultData.waNumber,
             contactDesc: data.contactDesc || defaultData.contactDesc,
             faqs: data.faqs || defaultData.faqs,
@@ -52,6 +54,36 @@ export default function KelolaKontak() {
 
   const handleChange = (key, value) => {
     setWebsiteData(prev => ({ ...prev, [key]: value }));
+  };
+
+  // ── FUNGSI DRAG AND DROP & UPLOAD LOGO ──
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        alert('Ukuran gambar terlalu besar! Maksimal 1MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleChange('logoUrl', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleChange('logoUrl', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleFaqChange = (index, field, value) => {
@@ -75,7 +107,7 @@ export default function KelolaKontak() {
     setIsSaving(true);
     try {
       await setDoc(doc(db, "settings", "website-data"), websiteData, { merge: true });
-      alert('Seluruh data teks website berhasil diperbarui di Cloud!');
+      alert('Seluruh data teks dan logo website berhasil diperbarui di Cloud!');
     } catch (error) {
       alert('Gagal menyimpan ke Cloud: ' + error.message);
     } finally {
@@ -109,12 +141,50 @@ export default function KelolaKontak() {
 
       <main className="flex-1 p-8 overflow-y-auto max-h-screen">
         <header className="mb-6 border-b border-stone-200 pb-4">
-          <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">Manajemen Teks Website (Cloud)</h2>
-          <p className="text-stone-500 text-sm mt-1">Ubah teks Kisah Kami, nomor WhatsApp, FAQ, dan jam operasional secara dinamis.</p>
+          <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">Manajemen Teks & Logo Website (Cloud)</h2>
+          <p className="text-stone-500 text-sm mt-1">Ubah logo navbar/footer, teks Kisah Kami, nomor WhatsApp, FAQ, dan jam operasional secara dinamis.</p>
         </header>
 
         <form onSubmit={handleSave} className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-6 max-w-4xl mb-12">
           
+          {/* ── BAGIAN: DRAG AND DROP LOGO NAVBAR & FOOTER ── */}
+          <div className="space-y-3 pb-4 border-b border-stone-200">
+            <h3 className="text-stone-900 font-extrabold text-base text-amber-600">🖼️ Logo Navbar & Footer Utama</h3>
+            <p className="text-xs text-stone-500">Seret file logo ke kotak di bawah atau klik untuk memilih file dari komputer.</p>
+            
+            <div 
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className="border-2 border-dashed border-stone-300 hover:border-amber-500 rounded-2xl p-6 text-center bg-stone-50 transition-all cursor-pointer relative group"
+            >
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+              />
+
+              {websiteData.logoUrl ? (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={websiteData.logoUrl} 
+                    alt="Pratinjau Logo" 
+                    className="w-20 h-20 object-contain rounded-xl bg-white p-2 shadow-sm mb-2 border" 
+                  />
+                  <p className="text-xs text-amber-600 font-semibold">Logo aktif tersimpan! Tarik gambar lain atau klik untuk mengganti.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <svg className="w-10 h-10 text-stone-400 mb-2 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm font-semibold text-stone-700">Seret & letakkan file gambar logo di sini</p>
+                  <p className="text-xs text-stone-400 mt-1">atau klik untuk memilih file dari komputer (PNG/JPG)</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* ── BAGIAN: KISAH KAMI (KOTAK EDITOR VISUAL BOLD) ── */}
           <div className="space-y-4">
             <div className="border-b pb-2 flex justify-between items-center">
