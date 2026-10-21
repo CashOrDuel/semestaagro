@@ -92,8 +92,15 @@ export default function KelolaKontak() {
     e.preventDefault();
     setIsSaving(true);
     try {
+      // Simpan ke Cloud Firestore
       await setDoc(doc(db, "settings", "website-data"), websiteData, { merge: true });
-      alert('Seluruh data teks dan logo website berhasil diperbarui di Cloud!');
+      
+      // Simpan juga ke LocalStorage agar halaman Login & Register langsung ikut berubah
+      if (websiteData.logoUrl) {
+        localStorage.setItem('cachedLogo', websiteData.logoUrl);
+      }
+
+      alert('Seluruh data teks dan logo website berhasil diperbarui di Cloud & LocalStorage!');
     } catch (error) {
       alert('Gagal menyimpan ke Cloud: ' + error.message);
     } finally {
@@ -137,7 +144,7 @@ export default function KelolaKontak() {
           <div className="space-y-4">
             <div className="border-b pb-2">
               <h3 className="text-stone-900 font-extrabold text-base text-amber-600">🖼️ Pengaturan Logo Website Utama</h3>
-              <p className="text-xs text-stone-600 mt-0.5">Upload logo baru via drag & drop untuk mengubah logo di Navbar dan Footer seluruh halaman.</p>
+              <p className="text-xs text-stone-600 mt-0.5">Upload logo baru via drag & drop untuk mengubah logo di Navbar, Footer, serta halaman Login & Register.</p>
             </div>
 
             <div

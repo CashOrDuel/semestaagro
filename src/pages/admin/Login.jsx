@@ -1,36 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import logoDefault from '../../assets/download.jpg';
+import logoDefault from '../../assets/download.jpg'; // Fallback jika belum ada logo
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [dynamicLogo, setDynamicLogo] = useState('');
   const navigate = useNavigate();
 
-  // AMBIL LOGO DINAMIS DARI FIRESTORE (SAMA SEPERTI FOOTER & NAVBAR)
-  useEffect(() => {
-    const fetchLogo = async () => {
-      try {
-        const docRef = doc(db, "settings", "website-data");
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.logoUrl) {
-            setDynamicLogo(data.logoUrl);
-          }
-        }
-      } catch (error) {
-        console.error("Gagal mengambil logo untuk login:", error);
-      }
-    };
-    fetchLogo();
-  }, []);
+  // Ambil logo secara instan dari LocalStorage yang diatur oleh admin
+  const currentLogo = localStorage.getItem('cachedLogo') || logoDefault;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -63,7 +45,7 @@ export default function Login() {
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
             <img 
-              src={dynamicLogo || logoDefault} 
+              src={currentLogo} 
               alt="Logo CV Semesta Agro Sinergy" 
               className="w-full h-full object-cover" 
               onError={(e) => {
