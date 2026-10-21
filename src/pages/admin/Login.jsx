@@ -3,27 +3,30 @@ import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import logoDefault from '../../assets/download.jpg'; // Fallback jika data kosong
+import logoDefault from '../../assets/download.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [dynamicLogo, setDynamicLogo] = useState(''); // Menyimpan logo dari Firestore
+  const [dynamicLogo, setDynamicLogo] = useState('');
   const navigate = useNavigate();
 
-  // Ambil logo dari Firestore secara real-time saat halaman dibuka
+  // AMBIL LOGO DINAMIS DARI FIRESTORE (SAMA SEPERTI FOOTER & NAVBAR)
   useEffect(() => {
     const fetchLogo = async () => {
       try {
         const docRef = doc(db, "settings", "website-data");
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().logoUrl) {
-          setDynamicLogo(docSnap.data().logoUrl); // Set logo dari Firestore
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.logoUrl) {
+            setDynamicLogo(data.logoUrl);
+          }
         }
-      } catch (err) {
-        console.error("Gagal memuat logo dari Firestore:", err);
+      } catch (error) {
+        console.error("Gagal mengambil logo untuk login:", error);
       }
     };
     fetchLogo();
@@ -58,11 +61,14 @@ export default function Login() {
         
         {/* Identitas Brand */}
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-white">
+          <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
             <img 
               src={dynamicLogo || logoDefault} 
-              alt="Logo Perusahaan" 
+              alt="Logo CV Semesta Agro Sinergy" 
               className="w-full h-full object-cover" 
+              onError={(e) => {
+                e.target.src = logoDefault;
+              }}
             />
           </div>
           <div>
