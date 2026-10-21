@@ -10,7 +10,7 @@ import Kontak from './pages/Kontak';
 import Galeri from './pages/Galeri'; 
 
 // ── IMPORT HALAMAN AUTH PANEL ADMIN ──
-import Login from "./pages/admin/Login";
+import Login from "./pages/admin/login";
 import Register from "./pages/admin/register";
 
 // ── IMPORT HALAMAN MANAGEMENT CONTENT PANEL ADMIN ──
