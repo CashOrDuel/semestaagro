@@ -1,16 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth } from '../../firebase'; // ⚠️ Pastikan path ke firebase.js ini sudah benar
+import { auth, db } from '../../firebase'; // ⚠️ Pastikan db terimport
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import logoPerusahaan from '../../assets/download.jpg'; // Fallback asset
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dynamicLogo, setDynamicLogo] = useState('');
   const navigate = useNavigate();
 
-  const logoImg = "/src/assets/download.jpg";
+  // Ambil logo dinamis dari Firestore
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setDynamicLogo(docSnap.data().logoUrl);
+        }
+      } catch (err) {
+        console.error("Gagal memuat logo:", err);
+      }
+    };
+    fetchLogo();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,11 +38,7 @@ export default function Login() {
     try {
       setError('');
       setLoading(true);
-      
-      // VALIDASI: Masuk menggunakan Firebase Auth asli
       await signInWithEmailAndPassword(auth, email, password);
-      
-      // Jika berhasil, diarahkan ke dashboard admin
       navigate('/admin');
     } catch (err) {
       console.error(err);
@@ -46,7 +59,11 @@ export default function Login() {
         {/* Identitas Brand */}
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-white">
-            <img src={logoImg} alt="Logo Perusahaan" className="w-full h-full object-cover" />
+            <img 
+              src={dynamicLogo || logoPerusahaan} 
+              alt="Logo Perusahaan" 
+              className="w-full h-full object-cover" 
+            />
           </div>
           <div>
             <h2 className="text-stone-900 font-extrabold text-xl tracking-tight">Admin Dashboard Login</h2>
@@ -97,13 +114,10 @@ export default function Login() {
           </div>
         </form>
 
-        {/* ── TOMBOL SAKLAR MENU KE REGISTER (SANGAT SCANABLE) ── */}
         <div className="text-center pt-4 border-t border-stone-100 space-y-3">
           <div className="text-xs text-stone-500">
             Belum memiliki kredensial akun admin?
           </div>
-          
-          {/* Tombol sekunder yang mengarah ke Register */}
           <Link 
             to="/admin/register" 
             className="w-full inline-flex items-center justify-center py-2.5 border border-stone-300 hover:border-amber-500 rounded-xl text-xs font-bold text-stone-700 hover:text-amber-600 transition-all bg-white hover:bg-amber-50/30"

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth } from '../../firebase'; // ⚠️ Pastikan path ke firebase.js ini benar
+import { auth, db } from '../../firebase'; // ⚠️ Pastikan db terimport
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import logoPerusahaan from '../../assets/download.jpg'; // Fallback asset
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -9,9 +11,24 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [dynamicLogo, setDynamicLogo] = useState('');
   const navigate = useNavigate();
 
-  const logoImg = "/src/assets/download.jpg";
+  // Ambil logo dinamis dari Firestore
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setDynamicLogo(docSnap.data().logoUrl);
+        }
+      } catch (err) {
+        console.error("Gagal memuat logo:", err);
+      }
+    };
+    fetchLogo();
+  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -28,10 +45,7 @@ export default function Register() {
     try {
       setError('');
       setLoading(true);
-      
-      // Mendaftarkan user baru ke Firebase Auth (ditambahkan .trim() untuk mencegah spasi tidak sengaja)
       await createUserWithEmailAndPassword(auth, email.trim(), password);
-      
       alert('Akun Admin berhasil dibuat! Silakan login.');
       navigate('/admin/login');
     } catch (err) {
@@ -41,7 +55,6 @@ export default function Register() {
       } else if (err.code === 'auth/invalid-email') {
         setError('Format penulisan email tidak valid!');
       } else {
-        // ── MODIFIKASI AMAN: Menampilkan kode error spesifik dari Firebase ──
         setError(`Gagal mendaftarkan akun admin baru. Error: [${err.code}]`);
       }
     } finally {
@@ -56,7 +69,11 @@ export default function Register() {
         {/* Identitas Brand */}
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-white">
-            <img src={logoImg} alt="Logo Perusahaan" className="w-full h-full object-cover" />
+            <img 
+              src={dynamicLogo || logoPerusahaan} 
+              alt="Logo Perusahaan" 
+              className="w-full h-full object-cover" 
+            />
           </div>
           <div>
             <h2 className="text-stone-900 font-extrabold text-xl tracking-tight">Daftar Admin Baru</h2>
