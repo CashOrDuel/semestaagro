@@ -3,6 +3,8 @@ import { NavLink } from 'react-router-dom';
 // IMPORT KONEKSI FIRESTORE
 import { db } from "../firebase"; 
 import { doc, getDoc } from "firebase/firestore";
+// Logo default cadangan (fallback) jika admin belum meng-upload logo
+import logoDefault from '../assets/download.jpg';
 
 const quickLinks = [
   { to: '/', label: 'Beranda' },
@@ -15,31 +17,30 @@ const quickLinks = [
 
 export default function Footer() {
   const [waNumber, setWaNumber] = useState('6281234567890');
-  
-  // Path file logo aset milikmu
-  const logoImg = "/src/assets/download.jpg";
+  const [dynamicLogo, setDynamicLogo] = useState('');
 
-  // AMBIL DATA TEKS KONTAK (NOMOR WA) DARI FIRESTORE
+  // AMBIL DATA KONTAK & LOGO DINAMIS DARI FIRESTORE
   useEffect(() => {
-    const fetchContactNumber = async () => {
+    const fetchFooterData = async () => {
       try {
         const docRef = doc(db, "settings", "website-data");
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().waNumber) {
-          setWaNumber(docSnap.data().waNumber);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.waNumber) setWaNumber(data.waNumber);
+          if (data.logoUrl) setDynamicLogo(data.logoUrl);
         }
       } catch (error) {
-        console.error("Gagal mengambil data nomor untuk footer:", error);
+        console.error("Gagal mengambil data untuk footer:", error);
       }
     };
-    fetchContactNumber();
+    fetchFooterData();
   }, []);
 
   const waDefaultMessage = encodeURIComponent(
     'Halo Admin Sinergy! Saya ingin menanyakan informasi lebih lanjut mengenai produk Telur Sehat Sinergy.'
   );
 
-  // Array media sosial dipindahkan ke dalam agar link WhatsApp membaca waNumber dari Cloud
   const socials = [
     { 
       label: 'Instagram', 
@@ -66,13 +67,13 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              {/* FOTO LOGO DIBUAT BULAT SEMPURNA SECARA MANDIRI */}
+              {/* LOGO DINAMIS DARI DATABASE ATAU FALLBACK KE ASET LOKAL */}
               <img 
-                src={logoImg} 
+                src={dynamicLogo || logoDefault} 
                 alt="Logo CV Semesta Agro Sinergy" 
-                className="w-12 h-12 object-cover rounded-full shrink-0 shadow-md"
+                className="w-12 h-12 object-cover rounded-full shrink-0 shadow-md bg-stone-800"
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  e.target.src = logoDefault;
                 }}
               />
               
@@ -132,7 +133,6 @@ export default function Footer() {
                 </svg>
                 <div>
                   <p className="text-stone-300 font-semibold">Sinergi Warehouse</p>
-                  {/* Diperbarui berdasarkan detail lokasi real di gambarmu */}
                   <p className="text-stone-500">Perumahan umum griya jemani No.5,<br />Kota, Provinsi</p>
                   <a
                     href="https://maps.google.com"
@@ -159,7 +159,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── MODIFIKASI: BOTTOM BAR DIBUAT CENTERED & BERSIH TANPA TEKS KREASI ── */}
+        {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-stone-800 text-center">
           <p className="text-stone-500 text-xs tracking-wide">
             © {new Date().getFullYear()} CV Semesta Agro Sinergy. Seluruh hak dilindungi.

@@ -1,20 +1,43 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-// 1. Mengimpor file foto logo kamu dari folder assets
+// 1. Mengimpor file foto logo default dari folder assets
 import logoPerusahaan from '../assets/download.jpg';
+
+// IMPORT KONEKSI FIREBASE UNTUK LOGO DINAMIS
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const navLinks = [
   { to: '/', label: 'Beranda' },
   { to: '/tentang-kami', label: 'Tentang Kami' },
   { to: '/produk', label: 'Produk' },
   { to: '/edukasi', label: 'Edukasi' },
-  { to: '/galeri', label: 'Galeri' }, // ➕ TAMBAHAN: Tautan Galeri Pelanggan
+  { to: '/galeri', label: 'Galeri' },
   { to: '/kontak', label: 'Kontak' },
 ];
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // State untuk menyimpan logo dinamis dari Firestore
+  const [dynamicLogo, setDynamicLogo] = useState('');
+
+  // Ambil logo dinamis dari Firebase Cloud saat komponen dimuat
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setDynamicLogo(docSnap.data().logoUrl);
+        }
+      } catch (error) {
+        console.error("Gagal memuat logo dari Cloud:", error);
+      }
+    };
+    fetchLogo();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -41,10 +64,10 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
           <NavLink to="/" className="flex items-center gap-2.5 group">
-            {/* 2. Bagian Lingkaran SAS sekarang diganti menjadi Foto Logo Perusahaan */}
-            <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow-amber-200 group-hover:shadow-md transition-shadow duration-300">
+            {/* Logo: Menggunakan logo dinamis dari Cloud jika ada, atau fallback ke logoPerusahaan asset */}
+            <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow-amber-200 group-hover:shadow-md transition-shadow duration-300 bg-stone-100">
               <img 
-                src={logoPerusahaan} 
+                src={dynamicLogo || logoPerusahaan} 
                 alt="Logo CV Semesta Agro Sinergy" 
                 className="w-full h-full object-cover"
               />
