@@ -3,31 +3,37 @@ import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import logoDefault from '../../assets/download.jpg'; // Cadangan jika kosong
+import logoDefault from '../../assets/download.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentLogo, setCurrentLogo] = useState(logoDefault);
+  
+  // Baca localStorage terlebih dahulu agar logo langsung muncul instan tanpa jeda
+  const [currentLogo, setCurrentLogo] = useState(() => {
+    return localStorage.getItem('cachedLogo') || logoDefault;
+  });
+
   const navigate = useNavigate();
 
-  // Ambil logo langsung dari Firestore (sama seperti halaman lain)
+  // Sinkronisasi dengan Firestore di background
   useEffect(() => {
-    const fetchLogoFromFirestore = async () => {
+    const fetchLogo = async () => {
       try {
         const docRef = doc(db, "settings", "website-data");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().logoUrl) {
-          setCurrentLogo(docSnap.data().logoUrl);
+          const url = docSnap.data().logoUrl;
+          setCurrentLogo(url);
+          localStorage.setItem('cachedLogo', url);
         }
       } catch (err) {
-        console.error("Gagal memuat logo dari Firestore:", err);
+        console.error("Gagal sinkronisasi logo:", err);
       }
     };
-
-    fetchLogoFromFirestore();
+    fetchLogo();
   }, []);
 
   const handleLogin = async (e) => {
@@ -61,7 +67,7 @@ export default function Login() {
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
             <img 
-              src={currentLogo} // Menggunakan logo hasil tarikan Firestore
+              src={currentLogo} 
               alt="Logo CV Semesta Agro Sinergy" 
               className="w-full h-full object-cover" 
               onError={(e) => {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { getStoredLogo } from '../../getLogo';
+import { doc, getDoc } from 'firebase/firestore';
 import logoDefault from '../../assets/download.jpg';
 
 export default function Register() {
@@ -11,13 +11,28 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentLogo, setCurrentLogo] = useState(logoDefault);
+  
+  const [currentLogo, setCurrentLogo] = useState(() => {
+    return localStorage.getItem('cachedLogo') || logoDefault;
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    getStoredLogo().then((url) => {
-      if (url) setCurrentLogo(url);
-    });
+    const fetchLogo = async () => {
+      try {
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          const url = docSnap.data().logoUrl;
+          setCurrentLogo(url);
+          localStorage.setItem('cachedLogo', url);
+        }
+      } catch (err) {
+        console.error("Gagal sinkronisasi logo:", err);
+      }
+    };
+    fetchLogo();
   }, []);
 
   const handleRegister = async (e) => {
