@@ -7,7 +7,7 @@ import logoPerusahaan from '../../assets/download.jpg';
 const defaultData = {
   waNumber: "6281234567890",
   contactDesc: "Ada pertanyaan? Ingin memesan? Tim Sinergy siap membantu Anda. Cara termudah adalah langsung via WhatsApp.",
-  logoUrl: "", // ➕ TAMBAHAN: Menyimpan string base64 logo dinamis
+  logoUrl: "", 
   faqs: [
     { q: 'Apakah bisa pembelian dalam jumlah besar / grosir?', a: 'Ya! Kami melayani pembelian eceran maupun grosir.' },
     { q: 'Apakah tersedia layanan pengiriman?', a: 'Kami menyediakan layanan pengiriman ke area tertentu.' },
@@ -36,7 +36,7 @@ export default function KelolaKontak() {
           setWebsiteData({
             waNumber: data.waNumber || defaultData.waNumber,
             contactDesc: data.contactDesc || defaultData.contactDesc,
-            logoUrl: data.logoUrl || "", // Ambil data logo dari Cloud
+            logoUrl: data.logoUrl || "",
             faqs: data.faqs || defaultData.faqs,
             operationalHours: data.operationalHours || defaultData.operationalHours,
             aboutStoryTitle: data.aboutStoryTitle || defaultData.aboutStoryTitle,
@@ -56,7 +56,6 @@ export default function KelolaKontak() {
     setWebsiteData(prev => ({ ...prev, [key]: value }));
   };
 
-  // ➕ FUNGSI UNTUK MENANGANI DRAG & DROP / PILIH FILE LOGO
   const handleLogoChange = (e) => {
     const file = e.target.files ? e.target.files[0] : e.dataTransfer.files[0];
     if (file) {
@@ -178,7 +177,7 @@ export default function KelolaKontak() {
             </div>
           </div>
 
-          {/* ── BAGIAN: KISAH KAMI (KOTAK EDITOR VISUAL BOLD) ── */}
+          {/* ── BAGIAN: KISAH KAMI ── */}
           <div className="space-y-4 pt-4 border-t border-stone-200">
             <div className="border-b pb-2 flex justify-between items-center">
               <div>
