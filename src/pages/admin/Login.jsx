@@ -3,37 +3,39 @@ import { useNavigate, Link } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import logoDefault from '../../assets/download.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Baca localStorage terlebih dahulu agar logo langsung muncul instan tanpa jeda
-  const [currentLogo, setCurrentLogo] = useState(() => {
-    return localStorage.getItem('cachedLogo') || logoDefault;
-  });
-
+  const [currentLogo, setCurrentLogo] = useState(''); // Mulai dari kosong
   const navigate = useNavigate();
 
-  // Sinkronisasi dengan Firestore di background
+  // Murni mengambil dari Firestore
   useEffect(() => {
-    const fetchLogo = async () => {
+    const fetchLogoFromFirestore = async () => {
       try {
         const docRef = doc(db, "settings", "website-data");
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().logoUrl) {
-          const url = docSnap.data().logoUrl;
-          setCurrentLogo(url);
-          localStorage.setItem('cachedLogo', url);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("Data Firestore ditemukan untuk Login:", data);
+          if (data.logoUrl) {
+            setCurrentLogo(data.logoUrl);
+          } else {
+            console.log("Field logoUrl di Firestore kosong.");
+          }
+        } else {
+          console.log("Dokumen settings/website-data tidak ditemukan di Firestore!");
         }
       } catch (err) {
-        console.error("Gagal sinkronisasi logo:", err);
+        console.error("Gagal mengambil logo dari Firestore:", err);
       }
     };
-    fetchLogo();
+
+    fetchLogoFromFirestore();
   }, []);
 
   const handleLogin = async (e) => {
@@ -66,14 +68,15 @@ export default function Login() {
         {/* Identitas Brand */}
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
-            <img 
-              src={currentLogo} 
-              alt="Logo CV Semesta Agro Sinergy" 
-              className="w-full h-full object-cover" 
-              onError={(e) => {
-                e.target.src = logoDefault;
-              }}
-            />
+            {currentLogo ? (
+              <img 
+                src={currentLogo} 
+                alt="Logo CV Semesta Agro Sinergy" 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="text-[10px] font-bold text-stone-400 text-center px-1">Memuat Logo...</div>
+            )}
           </div>
           <div>
             <h2 className="text-stone-900 font-extrabold text-xl tracking-tight">Admin Dashboard Login</h2>
