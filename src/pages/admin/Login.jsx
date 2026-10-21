@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { getStoredLogo } from '../../getLogo';
-import logoDefault from '../../assets/download.jpg';
+import { doc, getDoc } from 'firebase/firestore';
+import logoDefault from '../../assets/download.jpg'; // Cadangan jika kosong
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,10 +13,21 @@ export default function Login() {
   const [currentLogo, setCurrentLogo] = useState(logoDefault);
   const navigate = useNavigate();
 
+  // Ambil logo langsung dari Firestore (sama seperti halaman lain)
   useEffect(() => {
-    getStoredLogo().then((url) => {
-      if (url) setCurrentLogo(url);
-    });
+    const fetchLogoFromFirestore = async () => {
+      try {
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setCurrentLogo(docSnap.data().logoUrl);
+        }
+      } catch (err) {
+        console.error("Gagal memuat logo dari Firestore:", err);
+      }
+    };
+
+    fetchLogoFromFirestore();
   }, []);
 
   const handleLogin = async (e) => {
@@ -50,7 +61,7 @@ export default function Login() {
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
             <img 
-              src={currentLogo} 
+              src={currentLogo} // Menggunakan logo hasil tarikan Firestore
               alt="Logo CV Semesta Agro Sinergy" 
               className="w-full h-full object-cover" 
               onError={(e) => {
