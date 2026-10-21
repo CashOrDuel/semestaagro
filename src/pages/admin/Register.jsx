@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import logoDefault from '../../assets/download.jpg'; // Fallback jika belum ada logo
+import { getStoredLogo } from '../../getLogo';
+import logoDefault from '../../assets/download.jpg';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -10,10 +11,14 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [currentLogo, setCurrentLogo] = useState(logoDefault);
   const navigate = useNavigate();
 
-  // Ambil logo secara instan dari LocalStorage yang diatur oleh admin
-  const currentLogo = localStorage.getItem('cachedLogo') || logoDefault;
+  useEffect(() => {
+    getStoredLogo().then((url) => {
+      if (url) setCurrentLogo(url);
+    });
+  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
