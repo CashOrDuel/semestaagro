@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import logoDefault from '../../assets/download.jpg';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -11,29 +9,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const [currentLogo, setCurrentLogo] = useState(() => {
-    return localStorage.getItem('cachedLogo') || logoDefault;
-  });
-
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchLogo = async () => {
-      try {
-        const docRef = doc(db, "settings", "website-data");
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().logoUrl) {
-          const url = docSnap.data().logoUrl;
-          setCurrentLogo(url);
-          localStorage.setItem('cachedLogo', url);
-        }
-      } catch (err) {
-        console.error("Gagal sinkronisasi logo:", err);
-      }
-    };
-    fetchLogo();
-  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -71,22 +47,10 @@ export default function Register() {
     <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 font-sans antialiased">
       <div className="w-full max-w-md bg-white rounded-3xl border border-stone-200 shadow-xl p-8 space-y-6">
         
-        {/* Identitas Brand */}
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
-            <img 
-              src={currentLogo} 
-              alt="Logo CV Semesta Agro Sinergy" 
-              className="w-full h-full object-cover" 
-              onError={(e) => {
-                e.target.src = logoDefault;
-              }}
-            />
-          </div>
-          <div>
-            <h2 className="text-stone-900 font-extrabold text-xl tracking-tight">Daftar Admin Baru</h2>
-            <p className="text-amber-600 text-xs font-bold tracking-widest uppercase mt-0.5">CV Semesta Agro Sinergy</p>
-          </div>
+        {/* Identitas Brand (Tanpa Logo) */}
+        <div className="text-center space-y-1 pt-2">
+          <h2 className="text-stone-900 font-extrabold text-2xl tracking-tight">Daftar Admin Baru</h2>
+          <p className="text-amber-600 text-xs font-bold tracking-widest uppercase">CV Semesta Agro Sinergy</p>
         </div>
 
         {error && (

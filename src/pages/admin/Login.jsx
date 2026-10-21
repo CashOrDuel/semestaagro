@@ -1,42 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentLogo, setCurrentLogo] = useState(''); // Mulai dari kosong
   const navigate = useNavigate();
-
-  // Murni mengambil dari Firestore
-  useEffect(() => {
-    const fetchLogoFromFirestore = async () => {
-      try {
-        const docRef = doc(db, "settings", "website-data");
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          console.log("Data Firestore ditemukan untuk Login:", data);
-          if (data.logoUrl) {
-            setCurrentLogo(data.logoUrl);
-          } else {
-            console.log("Field logoUrl di Firestore kosong.");
-          }
-        } else {
-          console.log("Dokumen settings/website-data tidak ditemukan di Firestore!");
-        }
-      } catch (err) {
-        console.error("Gagal mengambil logo dari Firestore:", err);
-      }
-    };
-
-    fetchLogoFromFirestore();
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -65,23 +37,10 @@ export default function Login() {
     <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 font-sans antialiased">
       <div className="w-full max-w-md bg-white rounded-3xl border border-stone-200 shadow-xl p-8 space-y-6">
         
-        {/* Identitas Brand */}
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-stone-100">
-            {currentLogo ? (
-              <img 
-                src={currentLogo} 
-                alt="Logo CV Semesta Agro Sinergy" 
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              <div className="text-[10px] font-bold text-stone-400 text-center px-1">Memuat Logo...</div>
-            )}
-          </div>
-          <div>
-            <h2 className="text-stone-900 font-extrabold text-xl tracking-tight">Admin Dashboard Login</h2>
-            <p className="text-amber-600 text-xs font-bold tracking-widest uppercase mt-0.5">CV Semesta Agro Sinergy</p>
-          </div>
+        {/* Identitas Brand (Tanpa Logo, Hanya Teks) */}
+        <div className="text-center space-y-1 pt-2">
+          <h2 className="text-stone-900 font-extrabold text-2xl tracking-tight">Admin Dashboard</h2>
+          <p className="text-amber-600 text-xs font-bold tracking-widest uppercase">CV Semesta Agro Sinergy</p>
         </div>
 
         {error && (
