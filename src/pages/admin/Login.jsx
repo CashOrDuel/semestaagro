@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { auth, db } from '../../firebase'; // ⚠️ Pastikan db terimport
+import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import logoPerusahaan from '../../assets/download.jpg'; // Fallback asset
+import logoDefault from '../../assets/download.jpg'; // Fallback jika data kosong
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [dynamicLogo, setDynamicLogo] = useState('');
+  const [dynamicLogo, setDynamicLogo] = useState(''); // Menyimpan logo dari Firestore
   const navigate = useNavigate();
 
-  // Ambil logo dinamis dari Firestore
+  // Ambil logo dari Firestore secara real-time saat halaman dibuka
   useEffect(() => {
     const fetchLogo = async () => {
       try {
         const docRef = doc(db, "settings", "website-data");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().logoUrl) {
-          setDynamicLogo(docSnap.data().logoUrl);
+          setDynamicLogo(docSnap.data().logoUrl); // Set logo dari Firestore
         }
       } catch (err) {
-        console.error("Gagal memuat logo:", err);
+        console.error("Gagal memuat logo dari Firestore:", err);
       }
     };
     fetchLogo();
@@ -60,7 +60,7 @@ export default function Login() {
         <div className="text-center space-y-2">
           <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-md mx-auto border bg-white">
             <img 
-              src={dynamicLogo || logoPerusahaan} 
+              src={dynamicLogo || logoDefault} 
               alt="Logo Perusahaan" 
               className="w-full h-full object-cover" 
             />
