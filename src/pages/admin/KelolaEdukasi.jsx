@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from "../../firebase";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-// ── FIX LOGO: Import resmi foto logo perusahaan
-import logoPerusahaan from '../../assets/download.jpg';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
+// ── Cadangan logo lokal jika database kosong
+import logoFallback from '../../assets/download.jpg';
 
 const CATEGORIES = ['Manajemen Kandang', 'Perawatan Fasilitas', 'Sanitasi & Kebersihan', 'Tips Umum'];
 
@@ -18,12 +18,23 @@ export default function KelolaEdukasi() {
   const [content, setContent] = useState(''); 
   const [imagePath, setImagePath] = useState('');
 
+  // State untuk logo dinamis sidebar
+  const [sidebarLogo, setSidebarLogo] = useState(logoFallback);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Ambil data artikel
         const querySnapshot = await getDocs(collection(db, "articles"));
         const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setArticles(data);
+
+        // Ambil logo terbaru dari Firestore (settings/website-data)
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setSidebarLogo(docSnap.data().logoUrl);
+        }
       } catch (error) {
         console.error("Gagal mengambil data dari Cloud:", error);
       }
@@ -136,9 +147,9 @@ export default function KelolaEdukasi() {
       {/* Sidebar Menu Samping */}
       <aside className="w-64 bg-stone-900 text-white flex flex-col shrink-0 shadow-xl">
         <div className="p-5 border-b border-stone-800 flex items-center gap-2">
-          {/* ── FIX LOGO: Mengganti teks SAS menjadi Foto Bulat Sempurna ── */}
+          {/* ── LOGO DINAMIS DARI FIRESTORE ── */}
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white shrink-0 shadow-sm border border-stone-700">
-            <img src={logoPerusahaan} alt="Logo CV Semesta" className="w-full h-full object-cover" />
+            <img src={sidebarLogo} alt="Logo CV Semesta" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-extrabold text-sm leading-tight">CV Semesta</h1>
@@ -158,7 +169,6 @@ export default function KelolaEdukasi() {
       </aside>
 
       <main className="flex-1 p-8 overflow-y-auto max-h-screen">
-        {/* ── SEKARANG KELAS WARNA SUDAH FIX JELAS DAN TANPA KATA (CLOUD) ── */}
         <header className="mb-6 border-b border-stone-200 pb-4">
           <h2 className="text-2xl font-extrabold text-stone-800 tracking-tight">Manajemen Blog Edukasi</h2>
         </header>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from "../../firebase";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-// ── FIX LOGO: Import resmi foto logo perusahaan
-import logoPerusahaan from '../../assets/download.jpg';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
+// ── Cadangan logo lokal jika database kosong
+import logoFallback from '../../assets/download.jpg';
 
 const CATEGORIES = ['Aktivitas Kandang', 'Kontrol Kualitas', 'Distribusi & Logistik', 'Fasilitas Peternakan'];
 
@@ -18,13 +18,26 @@ export default function KelolaGaleri() {
   const [formDesc, setFormDesc] = useState('');
   const [formImagePath, setFormImagePath] = useState('');
 
+  // State untuk logo dinamis sidebar
+  const [sidebarLogo, setSidebarLogo] = useState(logoFallback);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Ambil data galeri
         const querySnapshot = await getDocs(collection(db, "gallery"));
         const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPhotos(data);
-      } catch (error) { console.error("Gagal mengambil data dari Cloud:", error); }
+
+        // Ambil logo terbaru dari Firestore (settings/website-data)
+        const docRef = doc(db, "settings", "website-data");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().logoUrl) {
+          setSidebarLogo(docSnap.data().logoUrl);
+        }
+      } catch (error) { 
+        console.error("Gagal mengambil data dari Cloud:", error); 
+      }
     };
     fetchData();
   }, []);
@@ -109,9 +122,9 @@ export default function KelolaGaleri() {
       {/* Sidebar */}
       <aside className="w-64 bg-stone-900 text-white flex flex-col shrink-0 shadow-xl">
         <div className="p-5 border-b border-stone-800 flex items-center gap-2">
-          {/* ── FIX LOGO: Mengganti teks SAS menjadi Foto Bulat Sempurna ── */}
+          {/* ── LOGO DINAMIS DARI FIRESTORE ── */}
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-white shrink-0 shadow-sm border border-stone-700">
-            <img src={logoPerusahaan} alt="Logo CV Semesta" className="w-full h-full object-cover" />
+            <img src={sidebarLogo} alt="Logo CV Semesta" className="w-full h-full object-cover" />
           </div>
           <div><h1 className="font-extrabold text-sm leading-tight">CV Semesta</h1><p className="text-amber-500 text-[10px] font-semibold tracking-widest uppercase">Admin Panel</p></div>
         </div>
