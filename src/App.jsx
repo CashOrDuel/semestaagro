@@ -11,7 +11,7 @@ import Galeri from './pages/Galeri';
 
 // ── IMPORT HALAMAN AUTH PANEL ADMIN ──
 import Login from "./pages/admin/Login";
-import Register from "./pages/admin/register";
+import Register from "./pages/admin/Register";
 
 // ── IMPORT HALAMAN MANAGEMENT CONTENT PANEL ADMIN ──
 import AdminDashboard from './pages/admin/AdminDashboard';
